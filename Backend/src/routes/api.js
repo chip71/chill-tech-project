@@ -12,6 +12,10 @@ const bannerController = require("../controller/bannerController")
 const adminBannerRoute = require("./adminBanner");
 const router = express.Router();
 const reportController = require("../controller/reportController");
+ //  REVIEW
+const reviewController = require("../controller/reviewController");
+const uploadReviewImage = require("../middleware/uploadReviewImage");
+
 
 const initAPIRoutes = (app) => {
   /* ===== AUTH ===== */
@@ -20,10 +24,12 @@ const initAPIRoutes = (app) => {
   router.post("/auth/logout", authController.logout);
   router.get("/auth/me", authController.me);
   router.put("/auth/change-password", authMiddleware, authController.changePassword);
+router.patch("/reviews/:reviewId/hidden", authMiddleware, reviewController.adminSetHidden);
 
   /* ===== PRODUCTS – USER ===== */
   router.get("/products/public", productController.getPublicProducts);
   router.get("/products/:id", productController.getProductById);
+
 
   /* ===== PRODUCTS – ADMIN ===== */
   router.get(
@@ -71,6 +77,41 @@ const initAPIRoutes = (app) => {
     checkoutController.confirmCheckout
   );
 
+   // REVIEWS – PUBLIC/USER/ADMIN
+    // ========================= */
+  // Public: list reviews
+  router.get("/products/:id/reviews", reviewController.getReviewsByProduct);
+
+  // Customer: create/update my review + images[]
+  router.post(
+    "/products/:id/reviews",
+    authMiddleware,
+    uploadReviewImage.array("images", 6),
+    reviewController.createMyReview
+  );
+  router.put("/reviews/:reviewId", authMiddleware, reviewController.updateMyReview);
+
+  
+  // Admin: edit/delete any review
+  router.put("/reviews/:reviewId", authMiddleware, reviewController.adminUpdateReview);
+  router.delete("/reviews/:reviewId", authMiddleware, reviewController.adminDeleteReview);
+   router.post(
+    "/products",
+    authMiddleware,
+    uploadProductImage.single("image"),
+    productController.createProduct
+  );
+router.get("/admin/reviews", authMiddleware, reviewController.adminListReviews);
+  router.put(
+    "/products/:id",
+    authMiddleware,
+    uploadProductImage.single("image"),
+    productController.updateProduct
+  );
+
+  router.put("/products/:id/toggle-status", authMiddleware, productController.toggleProductStatus);
+  router.delete("/products/:id", authMiddleware, productController.deleteProduct);
+  
   /* =====================================================
      🔥 ORDERS – CUSTOMER (THỨ TỰ RẤT QUAN TRỌNG)
      ===================================================== */

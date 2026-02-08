@@ -26,6 +26,10 @@ import {
   Form,
   Input,
   Empty,
+  Upload,
+  Modal,
+  Popconfirm,
+  Pagination,
 } from "antd";
 import {
   ShoppingCartOutlined,
@@ -34,13 +38,15 @@ import {
   SyncOutlined,
   MessageOutlined,
   UserOutlined,
+  UploadOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 
 const { Title, Text, Paragraph } = Typography;
 
 const API_URL = "http://localhost:9999";
-
 const money = (v) => (Number(v) || 0).toLocaleString("vi-VN");
 
 const ProductDetail = () => {
@@ -57,19 +63,106 @@ const ProductDetail = () => {
   // gallery selection
   const [activeImage, setActiveImage] = useState("");
 
-  // comments (demo local)
-  const storageKey = useMemo(() => `comments_product_${id}`, [id]);
-  const [comments, setComments] = useState([]);
+  // ✅ reviews (from DB) — thay cho localStorage comments
+  const [reviewForm] = Form.useForm();
+  const [editForm] = Form.useForm();
 
-  useEffect(() => {
-    // load comments from localStorage
+  const [reviews, setReviews] = useState([]);
+  const [reviewSummary, setReviewSummary] = useState({ avgRating: 0, count: 0 });
+  const [reviewPage, setReviewPage] = useState(1);
+  const [reviewTotal, setReviewTotal] = useState(0);
+  const [reviewLoading, setReviewLoading] = useState(false);
+
+  const [reviewImages, setReviewImages] = useState([]); // antd Upload fileList
+
+  // Admin edit modal
+  const [editOpen, setEditOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
+
+  const fetchReviews = async (page = 1) => {
     try {
-      const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      setComments(Array.isArray(saved) ? saved : []);
-    } catch {
-      setComments([]);
+      setReviewLoading(true);
+      const res = await axios.get(
+        `${API_URL}/api/products/${id}/reviews?page=${page}&limit=8`
+      );
+
+      setReviews(res.data?.items || []);
+      setReviewSummary(res.data?.summary || { avgRating: 0, count: 0 });
+      setReviewTotal(res.data?.total || 0);
+      setReviewPage(res.data?.page || page);
+    } catch (e) {
+      message.error("Không tải được đánh giá");
+    } finally {
+      setReviewLoading(false);
     }
-  }, [storageKey]);
+  };
+
+  const handleAddReview = async (values) => {
+    if (!user) {
+      message.warning("Vui lòng đăng nhập để đánh giá");
+      return navigate("/login", { state: { from: location.pathname } });
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("rating", values.rating);
+      formData.append("comment", values.content || "");
+
+      reviewImages.forEach((f) => {
+        if (f.originFileObj) formData.append("images", f.originFileObj);
+      });
+
+      await axios.post(`${API_URL}/api/products/${id}/reviews`, formData, {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      message.success("Đã gửi đánh giá!");
+      setReviewImages([]);
+      reviewForm.resetFields();
+      fetchReviews(1);
+    } catch (e) {
+      message.error(e?.response?.data?.message || "Gửi đánh giá thất bại");
+    }
+  };
+
+  const openEdit = (item) => {
+    setEditing(item);
+    editForm.setFieldsValue({
+      rating: item.rating,
+      comment: item.comment,
+    });
+    setEditOpen(true);
+  };
+
+  const submitAdminEdit = async () => {
+    try {
+      const v = await editForm.validateFields();
+      await axios.put(`${API_URL}/api/reviews/${editing._id}`, v, {
+        withCredentials: true,
+      });
+      message.success("Đã cập nhật review");
+      setEditOpen(false);
+      setEditing(null);
+      fetchReviews(reviewPage);
+    } catch (e) {
+      message.error(e?.response?.data?.message || "Cập nhật thất bại");
+    }
+  };
+
+  const adminDelete = async (reviewId) => {
+    try {
+      await axios.delete(`${API_URL}/api/reviews/${reviewId}`, {
+        withCredentials: true,
+      });
+      message.success("Đã xoá review");
+      fetchReviews(1);
+    } catch (e) {
+      message.error(e?.response?.data?.message || "Xoá thất bại");
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -83,7 +176,6 @@ const ProductDetail = () => {
           raw?.data ?? // { data: product }
           raw?.product ?? // { product: product }
           raw;
-
         const productData =
           maybe?.data && typeof maybe.data === "object" ? maybe.data : maybe;
 
@@ -107,7 +199,14 @@ const ProductDetail = () => {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // ✅ fetch reviews khi đổi product
+  useEffect(() => {
+    if (id) fetchReviews(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
   if (loading) return <Spin style={{ display: "block", margin: "100px auto" }} />;
+
   if (!product)
     return (
       <div style={{ textAlign: "center", padding: 40 }}>
@@ -126,24 +225,11 @@ const ProductDetail = () => {
       : `${API_URL}${product.imageUrl}`
     : "/no-image.png";
 
-  // gallery: nếu backend có thêm product.images (mảng) thì lấy, không thì dùng lặp ảnh chính
-  const gallery = Array.isArray(product.images) && product.images.length > 0
-    ? product.images.map((u) => (u.startsWith("http") ? u : `${API_URL}${u}`))
-    : [imageSrc, imageSrc, imageSrc, imageSrc];
-
-  const handleAddComment = (values) => {
-    const newComment = {
-      id: Date.now(),
-      name: values.name?.trim() || "Khách",
-      rating: Number(values.rating) || 5,
-      content: values.content?.trim(),
-      createdAt: new Date().toISOString(),
-    };
-    const next = [newComment, ...comments];
-    setComments(next);
-    localStorage.setItem(storageKey, JSON.stringify(next));
-    message.success("Đã gửi đánh giá!");
-  };
+  // gallery
+  const gallery =
+    Array.isArray(product.images) && product.images.length > 0
+      ? product.images.map((u) => (u.startsWith("http") ? u : `${API_URL}${u}`))
+      : [imageSrc, imageSrc, imageSrc, imageSrc];
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 16px 40px" }}>
@@ -238,11 +324,7 @@ const ProductDetail = () => {
                 <Title level={2} style={{ margin: 0, color: "#003a5c" }}>
                   {money(price)}₫
                 </Title>
-                {stock > 0 ? (
-                  <Tag color="green">Còn hàng</Tag>
-                ) : (
-                  <Tag color="red">Hết hàng</Tag>
-                )}
+                {stock > 0 ? <Tag color="green">Còn hàng</Tag> : <Tag color="red">Hết hàng</Tag>}
               </div>
 
               <Text>
@@ -266,7 +348,9 @@ const ProductDetail = () => {
                       min={1}
                       max={stock || 1}
                       value={quantity}
-                      onChange={(val) => setQuantity(Math.max(1, Math.min(Number(val) || 1, stock || 1)))}
+                      onChange={(val) =>
+                        setQuantity(Math.max(1, Math.min(Number(val) || 1, stock || 1)))
+                      }
                       style={{ width: 120 }}
                       disabled={stock <= 0}
                     />
@@ -277,133 +361,77 @@ const ProductDetail = () => {
                 </Col>
               </Row>
 
-              <Row gutter={[12, 12]}>
-                <Col span={24}>
-                  <Button
-                    type="primary"
-                    size="large"
-                    block
-                    icon={<ShoppingCartOutlined />}
-                    onClick={() => {
-                      if (!user) {
-                        message.info("Vui lòng đăng nhập để thêm vào giỏ");
-                        navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
-                        return;
-                      }
-                      addToCart(product, quantity);
-                      message.success("Đã thêm vào giỏ hàng!");
-                    }}
-                    disabled={stock <= 0}
-                  >
-                    Thêm vào giỏ hàng
-                  </Button>
-                </Col>
-                <Col span={24}>
-                  <Button
-                    size="large"
-                    block
-                    disabled={stock <= 0}
-                    onClick={() => {
-                      if (!user) {
-                        message.info("Vui lòng đăng nhập để mua hàng");
-                        navigate("/login", {
-                          replace: true,
-                          state: { from: location.pathname + location.search },
-                        });
-                        return;
-                      }
+              <Button
+                type="primary"
+                icon={<ShoppingCartOutlined />}
+                disabled={stock <= 0}
+                onClick={() => {
+                  addToCart(product, quantity);
+                  message.success("Đã thêm vào giỏ hàng!");
+                }}
+              >
+                Thêm vào giỏ hàng
+              </Button>
 
-                      addToCart(product, quantity);
-                      navigate("/cart");
-                    }}
-                  >
-                    Mua ngay
-                  </Button>
+              <Divider style={{ margin: "10px 0" }} />
 
-                </Col>
-              </Row>
-
-              <Divider style={{ margin: "12px 0" }} />
-
-              {/* Commitments */}
-              <Row gutter={[12, 12]}>
-                <Col span={8}>
-                  <Card size="small" bordered style={{ borderRadius: 12, textAlign: "center" }}>
-                    <TruckOutlined style={{ fontSize: 18 }} />
-                    <div style={{ marginTop: 6, fontSize: 12 }}>Giao hàng toàn quốc</div>
-                  </Card>
-                </Col>
-                <Col span={8}>
-                  <Card size="small" bordered style={{ borderRadius: 12, textAlign: "center" }}>
-                    <SafetyCertificateOutlined style={{ fontSize: 18 }} />
-                    <div style={{ marginTop: 6, fontSize: 12 }}>Bảo hành chính hãng</div>
-                  </Card>
-                </Col>
-                <Col span={8}>
-                  <Card size="small" bordered style={{ borderRadius: 12, textAlign: "center" }}>
-                    <SyncOutlined style={{ fontSize: 18 }} />
-                    <div style={{ marginTop: 6, fontSize: 12 }}>Đổi trả 7 ngày</div>
-                  </Card>
-                </Col>
-              </Row>
+              <Space wrap>
+                <Tag icon={<TruckOutlined />} color="geekblue">
+                  Giao nhanh
+                </Tag>
+                <Tag icon={<SafetyCertificateOutlined />} color="green">
+                  Chính hãng
+                </Tag>
+                <Tag icon={<SyncOutlined />} color="gold">
+                  Đổi trả 7 ngày
+                </Tag>
+              </Space>
             </Space>
           </Card>
         </Col>
       </Row>
 
       {/* DETAILS */}
-      <Divider style={{ margin: "26px 0" }} />
-
       <Card
         bordered={false}
         style={{
           borderRadius: 14,
           boxShadow: "0 6px 22px rgba(0,0,0,0.06)",
+          marginTop: 22,
         }}
         bodyStyle={{ padding: 18 }}
       >
-        <Title level={4} style={{ marginTop: 0 }}>
-          Thông tin sản phẩm
-        </Title>
-
         <Tabs
-          defaultActiveKey="desc"
+          defaultActiveKey="1"
           items={[
             {
-              key: "desc",
+              key: "1",
               label: "Mô tả",
               children: (
-                <div style={{ lineHeight: 1.8 }}>
-                  {product.description ? (
-                    <Paragraph style={{ marginBottom: 0 }}>{product.description}</Paragraph>
-                  ) : (
-                    <Text type="secondary">Chưa có mô tả cho sản phẩm này.</Text>
-                  )}
-                </div>
+                <Paragraph style={{ marginBottom: 0 }}>
+                  {product.description || "Chưa có mô tả cho sản phẩm này."}
+                </Paragraph>
               ),
             },
             {
-              key: "specs",
+              key: "2",
               label: "Thông số",
-              children: product.specs && typeof product.specs === "object" ? (
-                <Descriptions bordered column={1} size="middle">
-                  {Object.entries(product.specs).map(([k, v]) => (
-                    <Descriptions.Item key={k} label={k}>
-                      {String(v)}
-                    </Descriptions.Item>
-                  ))}
-                </Descriptions>
-              ) : (
-                <Descriptions bordered column={1} size="middle">
-                  <Descriptions.Item label="Danh mục">{product.category || "-"}</Descriptions.Item>
-                  <Descriptions.Item label="SKU">{product._id ? product._id.slice(-6) : "-"}</Descriptions.Item>
-                  <Descriptions.Item label="Tồn kho">{stock}</Descriptions.Item>
-                  <Descriptions.Item label="Giá">{money(price)}₫</Descriptions.Item>
+              children: (
+                <Descriptions column={1} bordered size="small">
+                  <Descriptions.Item label="Tên sản phẩm">
+                    {product.productName}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Danh mục">
+                    {product.category || "—"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Số lượng tồn">
+                    {stock}
+                  </Descriptions.Item>
                 </Descriptions>
               ),
             },
             {
-              key: "policy",
+              key: "3",
               label: "Chính sách",
               children: (
                 <div style={{ lineHeight: 1.8 }}>
@@ -437,15 +465,15 @@ const ProductDetail = () => {
           </Title>
         </Space>
 
-        {/* Comment Form */}
+        {/* Review Form */}
         <Card size="small" style={{ borderRadius: 12 }} bodyStyle={{ padding: 14 }}>
-          <Form layout="vertical" onFinish={handleAddComment} initialValues={{ rating: 5 }}>
+          <Form
+            form={reviewForm}
+            layout="vertical"
+            onFinish={handleAddReview}
+            initialValues={{ rating: 5 }}
+          >
             <Row gutter={[12, 12]}>
-              <Col xs={24} md={8}>
-                <Form.Item name="name" label="Tên của bạn">
-                  <Input placeholder="Ví dụ: Duy An" />
-                </Form.Item>
-              </Col>
               <Col xs={24} md={8}>
                 <Form.Item
                   name="rating"
@@ -455,7 +483,8 @@ const ProductDetail = () => {
                   <Rate />
                 </Form.Item>
               </Col>
-              <Col xs={24} md={24}>
+
+              <Col xs={24} md={16}>
                 <Form.Item
                   name="content"
                   label="Nội dung"
@@ -464,10 +493,43 @@ const ProductDetail = () => {
                     { min: 6, message: "Tối thiểu 6 ký tự" },
                   ]}
                 >
-                  <Input.TextArea rows={3} placeholder="Chia sẻ trải nghiệm của bạn..." />
+                  <Input.TextArea
+                    rows={3}
+                    placeholder="Chia sẻ trải nghiệm của bạn... (từ bậy sẽ bị tự động che ***)"
+                  />
                 </Form.Item>
               </Col>
+
               <Col xs={24}>
+                <Form.Item label="Ảnh phản hồi (tối đa 6)">
+                  <Upload
+                    listType="picture-card"
+                    fileList={reviewImages}
+                    onChange={({ fileList }) => setReviewImages(fileList)}
+                    beforeUpload={() => false}
+                    accept="image/png,image/jpeg,image/webp"
+                    multiple
+                    maxCount={6}
+                  >
+                    {reviewImages.length >= 6 ? null : (
+                      <div style={{ textAlign: "center" }}>
+                        <UploadOutlined />
+                        <div style={{ marginTop: 8 }}>Tải ảnh</div>
+                      </div>
+                    )}
+                  </Upload>
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} style={{ display: "flex", justifyContent: "space-between" }}>
+                <Space align="center">
+                  <Rate disabled allowHalf value={reviewSummary.avgRating || 0} />
+                  <Text type="secondary">
+                    {Number(reviewSummary.avgRating || 0).toFixed(1)} (
+                    {reviewSummary.count || 0} đánh giá)
+                  </Text>
+                </Space>
+
                 <Button type="primary" htmlType="submit">
                   Gửi đánh giá
                 </Button>
@@ -478,32 +540,116 @@ const ProductDetail = () => {
 
         <Divider style={{ margin: "18px 0" }} />
 
-        {/* Comments List */}
-        {comments.length === 0 ? (
+        {/* Reviews List */}
+        {reviewLoading ? (
+          <Spin />
+        ) : reviews.length === 0 ? (
           <Empty description="Chưa có bình luận nào. Hãy là người đầu tiên đánh giá!" />
         ) : (
-          <List
-            itemLayout="horizontal"
-            dataSource={comments}
-            renderItem={(c) => (
-              <List.Item>
-                <List.Item.Meta
-                  avatar={<Avatar icon={<UserOutlined />} />}
-                  title={
-                    <Space>
-                      <Text strong>{c.name}</Text>
-                      <Rate disabled value={c.rating} />
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {new Date(c.createdAt).toLocaleString("vi-VN")}
-                      </Text>
-                    </Space>
+          <>
+            <List
+              itemLayout="horizontal"
+              dataSource={reviews}
+              renderItem={(c) => (
+                <List.Item
+                  actions={
+                    isAdmin
+                      ? [
+                          <Button
+                            key="edit"
+                            size="small"
+                            icon={<EditOutlined />}
+                            onClick={() => openEdit(c)}
+                          >
+                            Sửa
+                          </Button>,
+                          <Popconfirm
+                            key="del"
+                            title="Xoá đánh giá này?"
+                            okText="Xoá"
+                            cancelText="Huỷ"
+                            onConfirm={() => adminDelete(c._id)}
+                          >
+                            <Button danger size="small" icon={<DeleteOutlined />}>
+                              Xoá
+                            </Button>
+                          </Popconfirm>,
+                        ]
+                      : []
                   }
-                  description={<Text>{c.content}</Text>}
-                />
-              </List.Item>
-            )}
-          />
+                >
+                  <List.Item.Meta
+                    avatar={<Avatar icon={<UserOutlined />} />}
+                    title={
+                      <Space wrap>
+                        <Text strong>{c.userName || "Khách"}</Text>
+                        <Rate disabled value={c.rating} />
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {new Date(c.createdAt).toLocaleString("vi-VN")}
+                        </Text>
+                        {c.isEdited ? <Tag>Đã chỉnh sửa</Tag> : null}
+                      </Space>
+                    }
+                    description={
+                      <Space direction="vertical" style={{ width: "100%" }} size={8}>
+                        {c.comment ? <Text>{c.comment}</Text> : null}
+
+                        {Array.isArray(c.images) && c.images.length > 0 ? (
+                          <Image.PreviewGroup>
+                            <Space wrap>
+                              {c.images.map((src, idx) => (
+                                <Image
+                                  key={idx}
+                                  width={90}
+                                  height={90}
+                                  src={`${API_URL}${src}`}
+                                  style={{ borderRadius: 10, objectFit: "cover" }}
+                                />
+                              ))}
+                            </Space>
+                          </Image.PreviewGroup>
+                        ) : null}
+                      </Space>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <Pagination
+                current={reviewPage}
+                total={reviewTotal}
+                pageSize={8}
+                onChange={(p) => fetchReviews(p)}
+                showSizeChanger={false}
+              />
+            </div>
+          </>
         )}
+
+        {/* Admin Edit Modal */}
+        <Modal
+          title="Admin sửa đánh giá"
+          open={editOpen}
+          onOk={submitAdminEdit}
+          onCancel={() => setEditOpen(false)}
+          okText="Lưu"
+          cancelText="Huỷ"
+        >
+          <Form form={editForm} layout="vertical">
+            <Form.Item
+              name="rating"
+              label="Số sao"
+              rules={[{ required: true, message: "Chọn số sao" }]}
+            >
+              <Rate />
+            </Form.Item>
+            <Form.Item name="comment" label="Bình luận">
+              <Input.TextArea rows={4} maxLength={800} showCount />
+            </Form.Item>
+          </Form>
+        </Modal>
       </Card>
     </div>
   );
