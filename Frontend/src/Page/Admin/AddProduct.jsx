@@ -7,6 +7,8 @@ import {
   Upload,
   Switch,
   message,
+  Image,
+  Space,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useState } from "react";
@@ -17,6 +19,7 @@ const API_URL = "http://localhost:9999";
 const AddProduct = ({ open, onClose, onSuccess }) => {
   const [form] = Form.useForm();
   const [file, setFile] = useState(null);
+  const [imageLink, setImageLink] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (values) => {
@@ -26,13 +29,18 @@ const AddProduct = ({ open, onClose, onSuccess }) => {
       const formData = new FormData();
 
       Object.entries(values).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
+        if (value !== undefined && value !== null && key !== "imageUrl") {
           formData.append(key, value);
         }
       });
 
+      // ✅ Ưu tiên upload ảnh
       if (file) {
         formData.append("image", file);
+      }
+      // ✅ Nếu không upload → dùng link
+      else if (imageLink) {
+        formData.append("imageUrl", imageLink);
       }
 
       await axios.post(`${API_URL}/api/products`, formData, {
@@ -43,6 +51,7 @@ const AddProduct = ({ open, onClose, onSuccess }) => {
       message.success("Thêm sản phẩm thành công");
       form.resetFields();
       setFile(null);
+      setImageLink("");
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -67,16 +76,15 @@ const AddProduct = ({ open, onClose, onSuccess }) => {
           label="Tên sản phẩm"
           rules={[{ required: true, message: "Nhập tên sản phẩm" }]}
         >
-          <Input placeholder="VD: Compressor Danfoss" />
+          <Input />
         </Form.Item>
 
-        {/* ✅ DANH MỤC = INPUT */}
         <Form.Item
           name="category"
           label="Danh mục"
           rules={[{ required: true, message: "Nhập danh mục" }]}
         >
-          <Input placeholder="VD: Máy nén lạnh, Dây điện, Vật tư lạnh..." />
+          <Input />
         </Form.Item>
 
         <Form.Item
@@ -103,7 +111,7 @@ const AddProduct = ({ open, onClose, onSuccess }) => {
         </Form.Item>
 
         <Form.Item name="unit" label="Đơn vị">
-          <Input placeholder="VD: cái, mét, kg..." />
+          <Input />
         </Form.Item>
 
         <Form.Item name="wpu" label="Khối lượng (kg / đơn vị)">
@@ -118,10 +126,12 @@ const AddProduct = ({ open, onClose, onSuccess }) => {
           <Switch />
         </Form.Item>
 
-        <Form.Item label="Hình ảnh">
+        {/* ===== UPLOAD ẢNH ===== */}
+        <Form.Item label="Upload ảnh">
           <Upload
-            beforeUpload={(file) => {
-              setFile(file);
+            beforeUpload={(f) => {
+              setFile(f);
+              setImageLink("");
               return false;
             }}
             maxCount={1}
@@ -129,6 +139,32 @@ const AddProduct = ({ open, onClose, onSuccess }) => {
             <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
           </Upload>
         </Form.Item>
+
+        {/* ===== LINK ẢNH ===== */}
+        <Form.Item label="Hoặc link ảnh">
+          <Input
+            placeholder="https://example.com/image.jpg"
+            value={imageLink}
+            onChange={(e) => {
+              setImageLink(e.target.value);
+              setFile(null);
+            }}
+          />
+        </Form.Item>
+
+        {/* ===== PREVIEW ===== */}
+        {(file || imageLink) && (
+          <Space>
+            <Image
+              width={100}
+              src={
+                imageLink
+                  ? imageLink
+                  : URL.createObjectURL(file)
+              }
+            />
+          </Space>
+        )}
 
         <div style={{ textAlign: "right" }}>
           <Button onClick={onClose} style={{ marginRight: 8 }}>

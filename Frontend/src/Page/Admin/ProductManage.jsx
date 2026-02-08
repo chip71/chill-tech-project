@@ -11,6 +11,7 @@ import {
     Image,
     message,
     Select,
+    Modal,
 } from "antd";
 import {
     EditOutlined,
@@ -18,6 +19,7 @@ import {
     EyeOutlined,
     SearchOutlined,
     PlusOutlined,
+    DeleteOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
@@ -29,25 +31,22 @@ const { Option } = Select;
 const API_URL = "http://localhost:9999";
 
 /* ================= STOCK STATUS ================= */
-const renderStockStatus = (stock) => {
-    if (stock > 0) return <Tag color="green">Còn hàng</Tag>;
-    return <Tag color="red">Hết hàng</Tag>;
-};
+const renderStockStatus = (stock) =>
+    stock > 0 ? <Tag color="green">Còn hàng</Tag> : <Tag color="red">Hết hàng</Tag>;
 
 /* ================= PRODUCT STATUS ================= */
-const renderProductStatus = (status) => {
-    return status === "ACTIVE" ? (
+const renderProductStatus = (status) =>
+    status === "ACTIVE" ? (
         <Tag color="green">Đang bán</Tag>
     ) : (
         <Tag color="default">Đã ẩn</Tag>
     );
-};
 
 const ProductManage = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
-    const [stockFilter, setStockFilter] = useState("ALL"); // ALL | IN_STOCK | OUT_STOCK
+    const [stockFilter, setStockFilter] = useState("ALL");
     const [openAdd, setOpenAdd] = useState(false);
 
     const navigate = useNavigate();
@@ -60,7 +59,7 @@ const ProductManage = () => {
                 withCredentials: true,
             });
             setProducts(res.data.data || []);
-        } catch (err) {
+        } catch {
             message.error("Không tải được danh sách sản phẩm");
         } finally {
             setLoading(false);
@@ -75,7 +74,6 @@ const ProductManage = () => {
     const filteredProducts = useMemo(() => {
         let data = [...products];
 
-        // 🔍 Search
         if (searchText) {
             const keyword = searchText.toLowerCase();
             data = data.filter(
@@ -85,7 +83,6 @@ const ProductManage = () => {
             );
         }
 
-        // 📦 Stock filter
         if (stockFilter === "IN_STOCK") {
             data = data.filter((p) => p.stockQuantity > 0);
         }
@@ -97,25 +94,46 @@ const ProductManage = () => {
         return data;
     }, [products, searchText, stockFilter]);
 
-    /* ================= TOGGLE PRODUCT STATUS ================= */
-    const handleToggleStatus = async (product) => {
+    /* ================= TOGGLE STATUS (ẨN / HIỆN) ================= */
+    const toggleStatus = async (product) => {
         try {
             await axios.put(
                 `${API_URL}/api/products/${product._id}/toggle-status`,
                 {},
                 { withCredentials: true }
             );
-
             message.success(
                 product.status === "ACTIVE"
                     ? "Đã ẩn sản phẩm"
                     : "Đã hiển thị lại sản phẩm"
             );
-
             fetchProducts();
-        } catch (err) {
+        } catch {
             message.error("Thao tác thất bại");
         }
+    };
+
+    /* ================= DELETE (HARD) ================= */
+    const handleDelete = (product) => {
+        Modal.confirm({
+            title: "Xóa sản phẩm vĩnh viễn?",
+            content: "Hành động này không thể hoàn tác",
+            okText: "Xóa",
+            cancelText: "Hủy",
+            okButtonProps: { danger: true },
+            onOk: async () => {
+                try {
+                    await axios.delete(
+                        `${API_URL}/api/products/${product._id}`,
+                        { withCredentials: true }
+                    );
+                    message.success("Đã xóa sản phẩm");
+                    fetchProducts();
+                } catch {
+                    message.error("Xóa sản phẩm thất bại");
+                }
+            },
+        });
     };
 
     /* ================= TABLE COLUMNS ================= */
@@ -130,23 +148,17 @@ const ProductManage = () => {
                         ? url
                         : `${API_URL}${url}`
                     : "/no-image.png";
-
                 return (
                     <Image
                         width={48}
                         height={48}
                         src={src}
-                        fallback="/no-image.png"
                         preview={false}
-                        style={{
-                            borderRadius: 8,
-                            objectFit: "cover",
-                        }}
+                        style={{ borderRadius: 8, objectFit: "cover" }}
                     />
                 );
             },
         },
-
         {
             title: "Tên sản phẩm",
             dataIndex: "productName",
@@ -179,7 +191,7 @@ const ProductManage = () => {
         },
         {
             title: "Thao tác",
-            width: 160,
+            width: 200,
             render: (_, record) => (
                 <Space>
                     <Button
@@ -192,20 +204,24 @@ const ProductManage = () => {
 
                     {record.status === "ACTIVE" ? (
                         <Button
-                            danger
                             icon={<EyeInvisibleOutlined />}
-                            title="Ẩn sản phẩm"
-                            onClick={() => handleToggleStatus(record)}
+                            danger
+                            onClick={() => toggleStatus(record)}
                         />
                     ) : (
                         <Button
+                            icon={<EyeOutlined />}
                             type="primary"
                             ghost
-                            icon={<EyeOutlined />}
-                            title="Hiển thị lại"
-                            onClick={() => handleToggleStatus(record)}
+                            onClick={() => toggleStatus(record)}
                         />
                     )}
+
+                    <Button
+                        icon={<DeleteOutlined />}
+                        danger
+                        onClick={() => handleDelete(record)}
+                    />
                 </Space>
             ),
         },
@@ -218,7 +234,7 @@ const ProductManage = () => {
 
     return (
         <>
-            {/* ===== PAGE HEADER ===== */}
+            {/* ===== HEADER ===== */}
             <div style={{ marginBottom: 24 }}>
                 <Title level={3}>Quản lý sản phẩm</Title>
                 <Text type="secondary">
@@ -233,9 +249,9 @@ const ProductManage = () => {
                     <Space>
                         <Input
                             prefix={<SearchOutlined />}
-                            placeholder="Tìm theo tên hoặc danh mục..."
-                            style={{ width: 260 }}
+                            placeholder="Tìm theo tên hoặc danh mục"
                             allowClear
+                            style={{ width: 260 }}
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
                         />
@@ -291,7 +307,7 @@ const ProductManage = () => {
                 </Col>
             </Row>
 
-            {/* ===== ADD PRODUCT MODAL ===== */}
+            {/* ===== ADD PRODUCT ===== */}
             <AddProduct
                 open={openAdd}
                 onClose={() => setOpenAdd(false)}

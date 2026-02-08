@@ -21,7 +21,7 @@ import {
   message,
   Checkbox,
 } from "antd";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import FeaturedBanner from "../../components/FeaturedBanner/FeaturedBanner";
 import axios from "axios";
 import { useCart } from "../../Routes/Context/CartContext";
@@ -32,7 +32,6 @@ import {
   BarsOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
-
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -59,6 +58,9 @@ const ProductList = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
+
   // data
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,6 +116,13 @@ const ProductList = () => {
     background: "#fff",
   };
   // ===============================
+  useEffect(() => {
+    if (categoryFromUrl) {
+      setCategoriesSelected([categoryFromUrl]);
+    } else {
+      setCategoriesSelected([]);
+    }
+  }, [categoryFromUrl]);
 
   // load products
   useEffect(() => {

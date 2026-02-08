@@ -6,6 +6,7 @@ import {
   TagsOutlined,
   BarChartOutlined,
   SettingOutlined,
+  PictureOutlined
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -65,6 +66,11 @@ const AdminSidebar = () => {
             label: "Sản phẩm",
           },
           {
+            key: "/admin/categories",
+            icon: <TagsOutlined />,
+            label: "Danh mục",
+          },
+          {
             key: "/admin/orders",
             icon: <ShoppingOutlined />,
             label: "Đơn hàng",
@@ -78,7 +84,7 @@ const AdminSidebar = () => {
           // ✅ CHỈ THÊM MỤC NÀY
           {
             key: "/admin/banners",
-            icon: <TagsOutlined />,
+            icon: <PictureOutlined />,
             label: "Banner",
           },
 

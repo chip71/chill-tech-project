@@ -19,6 +19,8 @@ import CustomerProfile from "../../Page/Customer/CustomerProfile";
 import CustomerOrerList from "../../Page/Customer/CustomerOrerList";
 import AdminBanner from "../../Page/Admin/AdminBanner";
 import Warranty from "../../Page/Customer/Warranty";
+import Category from "../../Page/Customer/Category";
+import CategoryManage from "../../Page/Admin/CategoryManage";
 export const publicRoutes = [
   {
     path: "/",
@@ -33,11 +35,15 @@ export const publicRoutes = [
     element: <ProductDetail />,
   },
   {
+    path: "/categories",
+    element: <Category />,
+  },
+  {
     path: "/about",
     element: <About />,
   },
   {
-    path: "warranty",
+    path: "/warranty",
     element: <Warranty />,
   }
 ];
@@ -109,6 +115,10 @@ export const adminRoutes = [
   {
     path: "/admin/customers/:id",
     element: <AdminCustomerDetail />,
+  },
+  {
+    path: "/admin/categories",
+    element: <CategoryManage />,
   },
 
   {

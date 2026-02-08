@@ -50,6 +50,11 @@ const initAPIRoutes = (app) => {
     authMiddleware,
     productController.toggleProductStatus
   );
+  router.delete(
+    "/products/:id",
+    authMiddleware,
+    productController.deleteProduct
+  );
 
   /* ===== CART ===== */
   router.get("/cart", authMiddleware, cartController.getMyCart);
@@ -127,7 +132,7 @@ const initAPIRoutes = (app) => {
     customerController.updateMyProfile
   );
 
- /* ===== BANNERS – PUBLIC ===== */
+  /* ===== BANNERS – PUBLIC ===== */
   router.get("/banners", bannerController.getPublicBanners);
   router.use("/admin", adminBannerRoute);
 

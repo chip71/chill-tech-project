@@ -161,6 +161,10 @@ const AppHeader = () => {
                   label: <Link to="/products">Sản phẩm</Link>,
                 },
                 {
+                  key: "categories",
+                  label: <Link to="/categories">Danh mục</Link>,
+                },
+                {
                   key: "about",
                   label: <Link to="/about">Về chúng tôi</Link>,
                 },

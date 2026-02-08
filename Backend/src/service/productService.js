@@ -92,6 +92,14 @@ const toggleProductStatus = async (id) => {
   await product.save();
   return product;
 };
+const deleteProduct = async (id) => {
+  const product = await Product.findById(id);
+  if (!product) {
+    throw new Error("Sản phẩm không tồn tại");
+  }
+
+  await Product.findByIdAndDelete(id);
+};
 
 module.exports = {
   getAllProducts,
@@ -101,4 +109,6 @@ module.exports = {
   hideProduct,
   toggleProductStatus,
   getActiveProducts,
+  deleteProduct,
+
 };

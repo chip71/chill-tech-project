@@ -58,8 +58,13 @@ const createProduct = async (req, res) => {
   try {
     const payload = { ...req.body };
 
+    // ✅ Ưu tiên ảnh upload
     if (req.file) {
       payload.imageUrl = `/uploads/products/${req.file.filename}`;
+    }
+    // ✅ Nếu không upload → dùng link ảnh
+    else if (req.body.imageUrl) {
+      payload.imageUrl = req.body.imageUrl;
     }
 
     const product = await productService.createProduct(payload);
@@ -134,6 +139,17 @@ const toggleProductStatus = async (req, res) => {
     });
   }
 };
+/* ======================
+   DELETE PRODUCT (HARD)
+====================== */
+const deleteProduct = async (req, res) => {
+  try {
+    await productService.deleteProduct(req.params.id);
+    return res.json({ message: "Đã xóa sản phẩm vĩnh viễn" });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+};
 
 
 module.exports = {
@@ -146,4 +162,5 @@ module.exports = {
   createProduct,
   updateProduct,
   toggleProductStatus,
+  deleteProduct,
 };
