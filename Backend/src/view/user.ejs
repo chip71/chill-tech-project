@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create User</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+<!-- ================= FORM CREATE USER ================= -->
+<div class="user_form mt-4">
+<form method="POST" action="/users/create-user">
+    <div class="container">
+        <div class="row">
+
+            <h5 class="mb-3">Account Information</h5>
+
+            <div class="mb-3 col-6">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" name="email" required>
+            </div>
+
+            <div class="mb-3 col-6">
+                <label class="form-label">Phone</label>
+                <input type="text" class="form-control" name="phone">
+            </div>
+
+            <div class="mb-3 col-6">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" name="password" required>
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">Customer Information</h5>
+
+            <div class="mb-3 col-6">
+                <label class="form-label">Customer Name</label>
+                <input type="text" class="form-control" name="customerName" required>
+            </div>
+
+            <div class="mb-3 col-6">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-control" name="address">
+            </div>
+
+            <div class="mb-3 col-6">
+                <label class="form-label">Gender</label>
+                <select class="form-select" name="gender" required>
+                    <option value="">-- Select gender --</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+
+            <div class="col-12 mt-3">
+                <button type="submit" class="btn btn-primary">Create User</button>
+            </div>
+
+        </div>
+    </div>
+</form>
+</div>
+
+<hr class="my-5">
+
+<!-- ================= USER TABLE ================= -->
+<div class="container">
+    <h5 class="mb-3">User List</h5>
+
+    <table class="table table-bordered table-striped align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Customer Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Gender</th>
+                <th>Address</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        <% if (users && users.length > 0) { %>
+            <% users.forEach((user, index) => { %>
+                <tr>
+                    <td><%= index + 1 %></td>
+                    <td><%= user.customerName %></td>
+                    <td><%= user.account?.email %></td>
+                    <td><%= user.account?.phone || "-" %></td>
+                    <td><%= user.gender %></td>
+                    <td><%= user.address || "-" %></td>
+                    <td><%= user.account?.role %></td>
+                    <td>
+                        <span class="badge <%= user.account?.status === "ACTIVE" ? "bg-success" : "bg-danger" %>">
+                            <%= user.account?.status %>
+                        </span>
+                    </td>
+                    <td>
+                        <!-- EDIT BUTTON -->
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-success me-1"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editUserModal-<%= user._id %>"
+                        >
+                            Edit
+                        </button>
+
+                        <!-- DELETE BUTTON -->
+                        <a
+                            href="/users/delete/<%= user._id %>"
+                            class="btn btn-sm btn-danger"
+                            onclick="return confirm('Are you sure you want to delete this user?')"
+                        >
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- ================= EDIT MODAL ================= -->
+                <div
+                    class="modal fade"
+                    id="editUserModal-<%= user._id %>"
+                    tabindex="-1"
+                >
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+
+                            <form method="POST" action="/users/update/<%= user._id %>">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit User</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="row">
+
+                                        <div class="mb-3 col-6">
+                                            <label>Email</label>
+                                            <input class="form-control" value="<%= user.account?.email %>" disabled>
+                                        </div>
+
+                                        <div class="mb-3 col-6">
+                                            <label>Phone</label>
+                                            <input
+                                                class="form-control"
+                                                name="phone"
+                                                value="<%= user.account?.phone || '' %>"
+                                            >
+                                        </div>
+
+                                        <div class="mb-3 col-6">
+                                            <label>Customer Name</label>
+                                            <input
+                                                class="form-control"
+                                                name="customerName"
+                                                value="<%= user.customerName %>"
+                                                required
+                                            >
+                                        </div>
+
+                                        <div class="mb-3 col-6">
+                                            <label>Address</label>
+                                            <input
+                                                class="form-control"
+                                                name="address"
+                                                value="<%= user.address || '' %>"
+                                            >
+                                        </div>
+
+                                        <div class="mb-3 col-6">
+                                            <label>Gender</label>
+                                            <select name="gender" class="form-select">
+                                                <option value="MALE" <%= user.gender === "MALE" ? "selected" : "" %>>Male</option>
+                                                <option value="FEMALE" <%= user.gender === "FEMALE" ? "selected" : "" %>>Female</option>
+                                                <option value="OTHER" <%= user.gender === "OTHER" ? "selected" : "" %>>Other</option>
+                                            </select>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        Update
+                                    </button>
+                                </div>
+
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- ================= END EDIT MODAL ================= -->
+
+            <% }) %>
+        <% } else { %>
+            <tr>
+                <td colspan="9" class="text-center">No users found</td>
+            </tr>
+        <% } %>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
