@@ -11,6 +11,7 @@ const dashboardController = require("../controller/dashboardController");
 const bannerController = require("../controller/bannerController")
 const adminBannerRoute = require("./adminBanner");
 const router = express.Router();
+const reportController = require("../controller/reportController");
 
 const initAPIRoutes = (app) => {
   /* ===== AUTH ===== */
@@ -142,6 +143,37 @@ const initAPIRoutes = (app) => {
     authMiddleware,
     dashboardController.getDashboard
   );
+  /* ===== REPORTS – ADMIN ===== */
+router.get(
+  "/admin/reports",
+  authMiddleware,
+  reportController.getAdminReport
+);
+
+router.get(
+  "/admin/reports/revenue",
+  authMiddleware,
+  reportController.getRevenueReport
+);
+
+router.get(
+  "/admin/reports/orders-status",
+  authMiddleware,
+  reportController.getOrderStatusReport
+);
+
+router.get(
+  "/admin/reports/top-products",
+  authMiddleware,
+  reportController.getTopProductsReport
+);
+
+router.get(
+  "/admin/reports/categories",
+  authMiddleware,
+  reportController.getCategoryReport
+);
+
 
   return app.use("/api", router);
 };

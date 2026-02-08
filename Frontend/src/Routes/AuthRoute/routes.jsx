@@ -21,6 +21,8 @@ import AdminBanner from "../../Page/Admin/AdminBanner";
 import Warranty from "../../Page/Customer/Warranty";
 import Category from "../../Page/Customer/Category";
 import CategoryManage from "../../Page/Admin/CategoryManage";
+import AdminSettings from "../../Page/Admin/AdminSetting";
+import AdminReport from "../../Page/Admin/AdminReport";
 export const publicRoutes = [
   {
     path: "/",
@@ -120,7 +122,14 @@ export const adminRoutes = [
     path: "/admin/categories",
     element: <CategoryManage />,
   },
-
+  {
+    path: "/admin/settings",
+    element: <AdminSettings />
+  },
+  {
+    path: "admin/reports",
+    element: <AdminReport />
+  },
   {
     path: "/admin/banners",
     element: <AdminBanner />,
