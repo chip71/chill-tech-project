@@ -81,6 +81,9 @@ const ProductDetail = () => {
 
   const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
 
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyContent, setReplyContent] = useState("");
+
   const fetchReviews = async (page = 1) => {
     try {
       setReviewLoading(true);
@@ -98,6 +101,30 @@ const ProductDetail = () => {
       setReviewLoading(false);
     }
   };
+  const handleReply = async (reviewId) => {
+    if (!user) {
+      message.warning("Vui lòng đăng nhập để trả lời");
+      return;
+    }
+
+    if (!replyContent.trim()) return;
+
+    try {
+      await axios.post(
+        `${API_URL}/api/reviews/${reviewId}/replies`,
+        { content: replyContent },
+        { withCredentials: true }
+      );
+
+      message.success("Đã gửi phản hồi");
+      setReplyContent("");
+      setReplyingTo(null);
+      fetchReviews(reviewPage);
+    } catch (e) {
+      message.error(e?.response?.data?.message || "Không thể phản hồi");
+    }
+  };
+
 
   const handleAddReview = async (values) => {
     if (!user) {
@@ -551,33 +578,7 @@ const ProductDetail = () => {
               itemLayout="horizontal"
               dataSource={reviews}
               renderItem={(c) => (
-                <List.Item
-                  actions={
-                    isAdmin
-                      ? [
-                          <Button
-                            key="edit"
-                            size="small"
-                            icon={<EditOutlined />}
-                            onClick={() => openEdit(c)}
-                          >
-                            Sửa
-                          </Button>,
-                          <Popconfirm
-                            key="del"
-                            title="Xoá đánh giá này?"
-                            okText="Xoá"
-                            cancelText="Huỷ"
-                            onConfirm={() => adminDelete(c._id)}
-                          >
-                            <Button danger size="small" icon={<DeleteOutlined />}>
-                              Xoá
-                            </Button>
-                          </Popconfirm>,
-                        ]
-                      : []
-                  }
-                >
+                <List.Item>
                   <List.Item.Meta
                     avatar={<Avatar icon={<UserOutlined />} />}
                     title={
@@ -587,34 +588,134 @@ const ProductDetail = () => {
                         <Text type="secondary" style={{ fontSize: 12 }}>
                           {new Date(c.createdAt).toLocaleString("vi-VN")}
                         </Text>
-                        {c.isEdited ? <Tag>Đã chỉnh sửa</Tag> : null}
+                        {c.isEdited && <Tag>Đã chỉnh sửa</Tag>}
                       </Space>
                     }
                     description={
                       <Space direction="vertical" style={{ width: "100%" }} size={8}>
-                        {c.comment ? <Text>{c.comment}</Text> : null}
+                        {/* COMMENT */}
+                        {c.comment && <Text>{c.comment}</Text>}
+                        {/* REVIEW IMAGES */}
+                        {Array.isArray(c.images) && c.images.length > 0 && (
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {c.images.map((img, idx) => (
+                              <Image
+                                key={idx}
+                                src={img.startsWith("http") ? img : `${API_URL}${img}`}
+                                width={80}
+                                height={80}
+                                style={{ objectFit: "cover", borderRadius: 8 }}
+                                preview={{
+                                  src: img.startsWith("http") ? img : `${API_URL}${img}`,
+                                }}
+                              />
+                            ))}
+                          </div>
+                        )}
 
-                        {Array.isArray(c.images) && c.images.length > 0 ? (
-                          <Image.PreviewGroup>
-                            <Space wrap>
-                              {c.images.map((src, idx) => (
-                                <Image
+
+                        {/* ADMIN REPLY */}
+                        {c.adminReply && (
+                          <div
+                            style={{
+                              padding: "10px 12px",
+                              background: "#f6ffed",
+                              borderLeft: "4px solid #52c41a",
+                              borderRadius: 6,
+                            }}
+                          >
+                            <Text strong type="success">
+                              Phản hồi từ Admin
+                            </Text>
+                            <div>{c.adminReply}</div>
+                          </div>
+                        )}
+
+                        {/* USER REPLIES */}
+                        {Array.isArray(c.replies) && c.replies.length > 0 && (
+                          <div style={{ paddingLeft: 44 }}>
+                            {c.replies.map((r, idx) => {
+                              const isAdminReply = r.isAdmin;
+
+                              return (
+                                <div
                                   key={idx}
-                                  width={90}
-                                  height={90}
-                                  src={`${API_URL}${src}`}
-                                  style={{ borderRadius: 10, objectFit: "cover" }}
+                                  style={{
+                                    background: isAdminReply ? "#e6f4ff" : "#f5f7fa",
+                                    borderLeft: isAdminReply ? "4px solid #1677ff" : "3px solid #d9d9d9",
+                                    padding: "8px 12px",
+                                    borderRadius: 8,
+                                    marginBottom: 6,
+                                  }}
+                                >
+                                  <Space align="center" size={6}>
+                                    <Text strong style={{ color: isAdminReply ? "#1677ff" : "#000" }}>
+                                      {isAdminReply ? "Admin" : r.userName}
+                                    </Text>
+
+                                    {isAdminReply && <Tag color="blue">ADMIN</Tag>}
+
+                                    <Text type="secondary" style={{ fontSize: 12 }}>
+                                      {new Date(r.createdAt).toLocaleString("vi-VN")}
+                                    </Text>
+                                  </Space>
+
+                                  <div style={{ marginTop: 4 }}>{r.content}</div>
+                                </div>
+                              );
+                            })}
+
+                          </div>
+                        )}
+
+                        {/* REPLY FORM */}
+                        {user && user.role !== "GUEST" && (
+                          <div style={{ paddingLeft: 44 }}>
+                            {replyingTo === c._id ? (
+                              <>
+                                <Input.TextArea
+                                  rows={2}
+                                  value={replyContent}
+                                  onChange={(e) => setReplyContent(e.target.value)}
                                 />
-                              ))}
-                            </Space>
-                          </Image.PreviewGroup>
-                        ) : null}
+                                <Space style={{ marginTop: 6 }}>
+                                  <Button
+                                    size="small"
+                                    type="primary"
+                                    onClick={() => handleReply(c._id)}
+                                  >
+                                    Gửi
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    onClick={() => {
+                                      setReplyingTo(null);
+                                      setReplyContent("");
+                                    }}
+                                  >
+                                    Huỷ
+                                  </Button>
+                                </Space>
+                              </>
+                            ) : (
+                              <Button
+                                size="small"
+                                type="link"
+                                onClick={() => setReplyingTo(c._id)}
+                              >
+                                Trả lời
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </Space>
                     }
                   />
                 </List.Item>
               )}
             />
+
+
 
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <Pagination

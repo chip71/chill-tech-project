@@ -26,11 +26,11 @@ const AdminHeader = () => {
   };
 
   const items = [
-    {
-      key: "profile",
-      label: "Tài khoản",
-      icon: <UserOutlined />,
-    },
+    // {
+    //   key: "profile",
+    //   label: "Tài khoản",
+    //   icon: <UserOutlined />,
+    // },
     {
       key: "logout",
       label: "Đăng xuất",

@@ -22,7 +22,9 @@ import Warranty from "../../Page/Customer/Warranty";
 import Category from "../../Page/Customer/Category";
 import CategoryManage from "../../Page/Admin/CategoryManage";
 import AdminSettings from "../../Page/Admin/AdminSetting";
-import AdminReport from "../../Page/Admin/AdminReport";
+import TermsPage from "../../Page/Customer/Terms";
+import ReviewManage from "../../Page/Admin/ReviewManage";
+
 export const publicRoutes = [
   {
     path: "/",
@@ -47,6 +49,10 @@ export const publicRoutes = [
   {
     path: "/warranty",
     element: <Warranty />,
+  },
+  {
+    path: "/terms",
+    element: <TermsPage />
   }
 ];
 
@@ -127,11 +133,12 @@ export const adminRoutes = [
     element: <AdminSettings />
   },
   {
-    path: "admin/reports",
-    element: <AdminReport />
-  },
-  {
     path: "/admin/banners",
     element: <AdminBanner />,
   },
+  {
+    path: "admin/reviews",
+    element: <ReviewManage />
+  }
+
 ];

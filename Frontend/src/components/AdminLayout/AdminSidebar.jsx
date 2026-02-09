@@ -6,9 +6,9 @@ import {
   TagsOutlined,
   BarChartOutlined,
   SettingOutlined,
-   StarOutlined,
+  StarOutlined,
   PictureOutlined
-  
+
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -90,24 +90,19 @@ const AdminSidebar = () => {
             label: "Banner",
           },
 
-          {
-            key: "/admin/reports",
-            icon: <BarChartOutlined />,
-            label: "Báo cáo",
-          },
-             { key: "/admin/reviews", icon: <StarOutlined />, label: "Quản lý đánh giá" },
+          { key: "/admin/reviews", icon: <StarOutlined />, label: "Quản lý đánh giá" },
           {
             key: "/admin/settings",
             icon: <SettingOutlined />,
             label: "Cài đặt",
           },
-           
 
-         
+
+
         ]}
-        
+
       />
-      
+
     </Sider>
   );
 };

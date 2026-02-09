@@ -48,6 +48,30 @@ export default function AdminDashboard() {
   const [revenue, setRevenue] = useState([]);
   const [categories, setCategories] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
+  const handleExport = async () => {
+    try {
+      const res = await axios.get(
+        `${API_URL}/api/admin/dashboard/export`,
+        {
+          withCredentials: true,
+          responseType: "blob",
+        }
+      );
+
+      const url = window.URL.createObjectURL(
+        new Blob([res.data])
+      );
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "dashboard-report.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   /* ================= LOAD DASHBOARD ================= */
   const fetchDashboard = async () => {
@@ -86,7 +110,10 @@ export default function AdminDashboard() {
       {/* ===== HEADER ===== */}
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
         <Title level={3}>Tổng quan</Title>
-        <Button type="primary">Xuất báo cáo</Button>
+        <Button type="primary" onClick={handleExport}>
+          Xuất báo cáo
+        </Button>
+
       </Row>
 
       {/* ===== OVERVIEW ===== */}
