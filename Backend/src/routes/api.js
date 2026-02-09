@@ -11,8 +11,7 @@ const dashboardController = require("../controller/dashboardController");
 const bannerController = require("../controller/bannerController")
 const adminBannerRoute = require("./adminBanner");
 const router = express.Router();
-const reportController = require("../controller/reportController");
- //  REVIEW
+//  REVIEW
 const reviewController = require("../controller/reviewController");
 const uploadReviewImage = require("../middleware/uploadReviewImage");
 
@@ -24,7 +23,7 @@ const initAPIRoutes = (app) => {
   router.post("/auth/logout", authController.logout);
   router.get("/auth/me", authController.me);
   router.put("/auth/change-password", authMiddleware, authController.changePassword);
-router.patch("/reviews/:reviewId/hidden", authMiddleware, reviewController.adminSetHidden);
+  router.patch("/reviews/:reviewId/hidden", authMiddleware, reviewController.adminSetHidden);
 
   /* ===== PRODUCTS – USER ===== */
   router.get("/products/public", productController.getPublicProducts);
@@ -37,12 +36,10 @@ router.patch("/reviews/:reviewId/hidden", authMiddleware, reviewController.admin
     authMiddleware,
     productController.getAdminProducts
   );
-
-  router.post(
-    "/products",
+  router.get(
+    "/admin/dashboard/export",
     authMiddleware,
-    uploadProductImage.single("image"),
-    productController.createProduct
+    dashboardController.exportDashboardExcel
   );
 
   router.put(
@@ -77,8 +74,8 @@ router.patch("/reviews/:reviewId/hidden", authMiddleware, reviewController.admin
     checkoutController.confirmCheckout
   );
 
-   // REVIEWS – PUBLIC/USER/ADMIN
-    // ========================= */
+  // REVIEWS – PUBLIC/USER/ADMIN
+  // ========================= */
   // Public: list reviews
   router.get("/products/:id/reviews", reviewController.getReviewsByProduct);
 
@@ -88,20 +85,34 @@ router.patch("/reviews/:reviewId/hidden", authMiddleware, reviewController.admin
     authMiddleware,
     uploadReviewImage.array("images", 6),
     reviewController.createMyReview
+  ); router.get(
+    "/admin/reviews/stats",
+    authMiddleware,
+    reviewController.adminReviewStats
   );
-  router.put("/reviews/:reviewId", authMiddleware, reviewController.updateMyReview);
 
-  
-  // Admin: edit/delete any review
-  router.put("/reviews/:reviewId", authMiddleware, reviewController.adminUpdateReview);
+  // USER
+  router.put(
+    "/reviews/:reviewId",
+    authMiddleware,
+    reviewController.updateMyReview
+  );
+
+  // ADMIN
+  router.put(
+    "/admin/reviews/:reviewId",
+    authMiddleware,
+    reviewController.adminUpdateReview
+  );
+
   router.delete("/reviews/:reviewId", authMiddleware, reviewController.adminDeleteReview);
-   router.post(
+  router.post(
     "/products",
     authMiddleware,
     uploadProductImage.single("image"),
     productController.createProduct
   );
-router.get("/admin/reviews", authMiddleware, reviewController.adminListReviews);
+  router.get("/admin/reviews", authMiddleware, reviewController.adminListReviews);
   router.put(
     "/products/:id",
     authMiddleware,
@@ -111,7 +122,7 @@ router.get("/admin/reviews", authMiddleware, reviewController.adminListReviews);
 
   router.put("/products/:id/toggle-status", authMiddleware, productController.toggleProductStatus);
   router.delete("/products/:id", authMiddleware, productController.deleteProduct);
-  
+
   /* =====================================================
      🔥 ORDERS – CUSTOMER (THỨ TỰ RẤT QUAN TRỌNG)
      ===================================================== */
@@ -184,38 +195,13 @@ router.get("/admin/reviews", authMiddleware, reviewController.adminListReviews);
     authMiddleware,
     dashboardController.getDashboard
   );
-  /* ===== REPORTS – ADMIN ===== */
-router.get(
-  "/admin/reports",
-  authMiddleware,
-  reportController.getAdminReport
-);
 
-router.get(
-  "/admin/reports/revenue",
-  authMiddleware,
-  reportController.getRevenueReport
-);
-
-router.get(
-  "/admin/reports/orders-status",
-  authMiddleware,
-  reportController.getOrderStatusReport
-);
-
-router.get(
-  "/admin/reports/top-products",
-  authMiddleware,
-  reportController.getTopProductsReport
-);
-
-router.get(
-  "/admin/reports/categories",
-  authMiddleware,
-  reportController.getCategoryReport
-);
-
-
+  // USER ↔ USER reply
+  router.post(
+    "/reviews/:reviewId/replies",
+    authMiddleware,
+    reviewController.replyToReview
+  );
   return app.use("/api", router);
 };
 

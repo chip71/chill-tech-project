@@ -36,14 +36,8 @@ const AppFooter = () => {
             làm lạnh.
           </p>
           <Space size="middle">
-            <a
-              href="https://www.facebook.com/vattudienlanhphuhien?locale=vi_VN"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <FacebookFilled style={{ fontSize: 20 }} />
-            </a>
-            <MailOutlined style={{ fontSize: 20 }} />
+
+            {/* <MailOutlined style={{ fontSize: 20 }} /> */}
           </Space>
         </Col>
 
@@ -66,9 +60,17 @@ const AppFooter = () => {
             <span>
               <PhoneOutlined /> +84 986 215 146
             </span>
-            <span>
+            <a
+              href="https://www.facebook.com/vattudienlanhphuhien?locale=vi_VN"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <FacebookFilled style={{ fontSize: 20 }} /> Vật Tư Điện Lạnh Phú Hiền
+            </a>
+
+            {/* <span>
               <MailOutlined /> info@chilltech.vn
-            </span>
+            </span> */}
           </Space>
         </Col>
 

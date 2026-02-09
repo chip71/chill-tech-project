@@ -17,7 +17,7 @@ const About = () => {
 
   return (
     <main style={{ backgroundColor: "#fff", fontFamily: "Arial, sans-serif", color: "#333", lineHeight: "1.6" }}>
-      
+
       {/* ===== HERO SECTION ===== */}
       <section
         style={{
@@ -34,7 +34,7 @@ const About = () => {
             VỀ CHILL TECH
           </h1>
           <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.9)", margin: 0 }}>
-            Hơn 15 năm cung cấp linh kiện điện lạnh chính hãng cho các doanh nghiệp trên toàn Việt Nam
+            Website chính thức của điện lạnh Phú Hiền. Hơn 15 năm cung cấp linh kiện điện lạnh chính hãng cho các doanh nghiệp trên toàn Việt Nam
           </p>
         </div>
       </section>
@@ -45,23 +45,23 @@ const About = () => {
           <div style={{ flex: "1 1 450px" }}>
             <h2 style={{ fontSize: "2rem", color: "#0b1c36", marginBottom: "24px" }}>Câu Chuyện Thương Hiệu</h2>
             <p style={{ marginBottom: "16px", textAlign: "justify" }}>
-              Cách đây 25 năm, chàng trai trẻ <strong>Lê Hữu Phú</strong> phải gác lại ước mơ đại học sau biến cố gia đình: 
-              mẹ mất vì bệnh nặng, cha yếu mắt không thể lao động, và em gái còn đang học cấp hai. Gánh nặng mưu sinh 
+              Cách đây 25 năm, chàng trai trẻ <strong>Lê Hữu Phú</strong> phải gác lại ước mơ đại học sau biến cố gia đình:
+              mẹ mất vì bệnh nặng, cha yếu mắt không thể lao động, và em gái còn đang học cấp hai. Gánh nặng mưu sinh
               khiến ông phải lao vào đủ nghề — từ làm đường, làm đồng tôm, đến bán sắt vụn — chỉ mong lo được cho gia đình.
             </p>
             <p style={{ textAlign: "justify" }}>
-              Trong hành trình đó, ông nhận ra tiềm năng của ngành điện lạnh và quyết định gắn bó lâu dài. Từ việc thu mua 
-              phế liệu, ông dần mở rộng sang tái chế, kinh doanh linh kiện điện lạnh. Nhờ nỗ lực và ý chí bền bỉ, ông được 
-              một người chú trong họ nhận ra tài năng và hỗ trợ vốn để mở cửa hàng đầu tiên tại phố Lê Lai. Từ một cửa hàng nhỏ, 
-              bằng sự kiên trì, tinh thần học hỏi và uy tín trong kinh doanh, ông Lê Hữu Phú đã gây dựng nên doanh nghiệp 
+              Trong hành trình đó, ông nhận ra tiềm năng của ngành điện lạnh và quyết định gắn bó lâu dài. Từ việc thu mua
+              phế liệu, ông dần mở rộng sang tái chế, kinh doanh linh kiện điện lạnh. Nhờ nỗ lực và ý chí bền bỉ, ông được
+              một người chú trong họ nhận ra tài năng và hỗ trợ vốn để mở cửa hàng đầu tiên tại phố Lê Lai. Từ một cửa hàng nhỏ,
+              bằng sự kiên trì, tinh thần học hỏi và uy tín trong kinh doanh, ông Lê Hữu Phú đã gây dựng nên doanh nghiệp
               vật tư điện lạnh lớn mạnh, được khách hàng tin tưởng và đối tác đánh giá cao như hiện nay.
             </p>
           </div>
           <div style={{ flex: "1 1 400px", background: "linear-gradient(135deg, #f0f5ff 0%, #d6e4ff 100%)", padding: "20px", borderRadius: "16px" }}>
-            <img 
-              src="phuhien.jpg" 
-              alt="CHILLTECH Office" 
-              style={{ width: "100%", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)", display: "block" }} 
+            <img
+              src="phuhien.jpg"
+              alt="CHILLTECH Office"
+              style={{ width: "100%", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)", display: "block" }}
             />
           </div>
         </div>

@@ -23,15 +23,37 @@ const getReviewsByProduct = async (req, res) => {
 
     const page = Math.max(1, parseInt(req.query.page || "1", 10));
     const limit = Math.min(20, Math.max(1, parseInt(req.query.limit || "8", 10)));
-    const filter = { product: productId };
+    const filter = {
+      product: productId,
+      $or: [
+        { isHidden: false },
+        { isHidden: { $exists: false } },
+      ],
+    };
+
 
     const [items, total, summaryAgg] = await Promise.all([
       Review.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
       Review.countDocuments(filter),
       Review.aggregate([
-        { $match: { product: new mongoose.Types.ObjectId(productId) } },
-        { $group: { _id: "$product", avgRating: { $avg: "$rating" }, count: { $sum: 1 } } },
-      ]),
+        {
+          $match: {
+            product: new mongoose.Types.ObjectId(productId),
+            $or: [
+              { isHidden: false },
+              { isHidden: { $exists: false } },
+            ],
+          },
+        },
+        {
+          $group: {
+            _id: "$product",
+            avgRating: { $avg: "$rating" },
+            count: { $sum: 1 },
+          },
+        },
+      ])
+
     ]);
 
     const summary = summaryAgg?.[0] || { avgRating: 0, count: 0 };
@@ -183,11 +205,16 @@ const adminListReviews = async (req, res) => {
     const q = (req.query.q || "").trim();
     const rating = req.query.rating ? Number(req.query.rating) : null;
     const productId = req.query.productId || null;
+    const includeHidden = String(req.query.includeHidden) === "true";
 
     const filter = {};
+    if (!includeHidden) filter.isHidden = false;
     if (rating) filter.rating = rating;
-    if (productId) filter.product = productId;
 
+    // filter theo sản phẩm
+    if (productId && isValidObjectId(productId)) {
+      filter.product = productId;
+    }
     // search theo comment hoặc userName
     if (q) {
       filter.$or = [
@@ -247,14 +274,115 @@ const adminSetHidden = async (req, res) => {
     return res.status(500).json({ message: "Lỗi server" });
   }
 };
+// GET /api/admin/reviews/stats
+
+
+const adminReviewStats = async (req, res) => {
+  try {
+    if (String(req.user?.role || "").toUpperCase() !== "ADMIN") {
+      return res.status(403).json({ message: "Chỉ ADMIN được phép" });
+    }
+
+    const includeHidden = String(req.query.includeHidden) === "true";
+
+    // ✅ KHAI BÁO FILTER
+    const filter = {};
+
+    // ✅ logic hidden CHUẨN
+    if (!includeHidden) {
+      filter.$or = [
+        { isHidden: false },
+        { isHidden: { $exists: false } },
+      ];
+    }
+
+    const total = await Review.countDocuments(filter);
+
+    const bad = await Review.countDocuments({
+      ...filter,
+      rating: { $lte: 2 },
+    });
+
+    const badPercent = total === 0 ? 0 : Number(((bad / total) * 100).toFixed(2));
+
+    return res.json({
+      total,
+      bad,
+      badPercent,
+    });
+  } catch (err) {
+    console.error("adminReviewStats error:", err);
+    return res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
+// POST /api/reviews/:reviewId/replies
+const replyToReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const accountId = req.user?.accountId;
+
+    if (!accountId) {
+      return res.status(401).json({ message: "Chưa đăng nhập" });
+    }
+
+    if (!isValidObjectId(reviewId)) {
+      return res.status(400).json({ message: "Invalid review id" });
+    }
+
+    const content = (req.body.content || "").trim();
+    if (!content) {
+      return res.status(400).json({ message: "Nội dung reply trống" });
+    }
+
+    const review = await Review.findById(reviewId);
+    if (!review) {
+      return res.status(404).json({ message: "Không tìm thấy review" });
+    }
+
+    const role = String(req.user.role || "").toUpperCase();
+    const isAdmin = role === "ADMIN";
+
+    let userName = "User";
+
+    if (role === "CUSTOMER") {
+      const customer = await Customer.findById(req.user.customerId).lean();
+      userName = customer?.customerName || "Khách";
+    }
+
+    if (isAdmin) {
+      userName = "Admin";
+    }
+
+    review.replies.push({
+      account: accountId,
+      userName,
+      content: censorText(content),
+      isAdmin,
+    });
+
+    await review.save();
+
+    return res.status(201).json({
+      message: "Đã phản hồi",
+      replies: review.replies,
+    });
+  } catch (err) {
+    console.error("replyToReview error:", err);
+    return res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
 
 
 module.exports = {
-   getReviewsByProduct,
+  getReviewsByProduct,
   createMyReview,
   updateMyReview,
   adminUpdateReview,
   adminDeleteReview,
   adminListReviews,
-   adminSetHidden,
+  adminSetHidden,
+  adminReviewStats,
+  replyToReview,
 };

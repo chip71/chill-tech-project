@@ -9,7 +9,6 @@ import {
 import GuestRoute from "./GuestRoute";
 import CustomerRoute from "./CustomerRoute";
 import AdminRoute from "./AdminRoute";
-import ReviewManage from "../../Page/Admin/ReviewManage";
 
 import CustomerLayout from "../../components/Layout/CustomerLayout";
 import AdminLayout from "../../components/AdminLayout/AdminLayout";
@@ -48,7 +47,6 @@ const SystemRoute = () => {
           ))}
         </Route>
       </Route>
-<Route path="/admin/reviews" element={<ReviewManage />} />
       <Route path="/403" element={<UnAuthorizedPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

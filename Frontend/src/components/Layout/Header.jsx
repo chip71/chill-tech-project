@@ -11,6 +11,7 @@ import {
 import {
   PhoneOutlined,
   MailOutlined,
+  FacebookOutlined,
   ShoppingCartOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -64,8 +65,12 @@ const AppHeader = () => {
               <span>
                 <PhoneOutlined /> Hotline: 0986 215 146
               </span>
-              <span>
+              {/* <span>
                 <MailOutlined /> info@chilltech.vn
+              </span> */}
+              <span>
+                <FacebookOutlined /> Vật Tư Điện Lạnh Phú Hiền
+
               </span>
             </Space>
           </Col>
@@ -170,7 +175,7 @@ const AppHeader = () => {
                 },
                 {
                   key: "warranty",
-                  label: <Link to="/warranty">Chính sách đổi trả</Link>,
+                  label: <Link to="/warranty">Chính sách bảo hành</Link>,
                 },
               ]}
             />
