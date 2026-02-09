@@ -53,6 +53,7 @@ export default function ReviewManage() {
   const [loading, setLoading] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [total, setTotal] = useState(0);
+  const [hasProfanity, setHasProfanity] = useState("");
 
   const [stats, setStats] = useState({ total: 0, bad: 0, badPercent: 0 });
 
@@ -89,6 +90,7 @@ export default function ReviewManage() {
       });
       if (q) params.set("q", q);
       if (rating) params.set("rating", rating);
+      if (hasProfanity !== "") params.set("hasProfanity", hasProfanity);
 
       const res = await axios.get(
         `${API_URL}/api/admin/reviews?${params.toString()}`,
@@ -339,6 +341,65 @@ export default function ReviewManage() {
           </Card>
         </Col>
       </Row>
+      <Space style={{ marginBottom: 12 }} wrap>
+        <Input
+          allowClear
+          prefix={<SearchOutlined />}
+          placeholder="Tìm nội dung / tên người dùng"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          style={{ width: 260 }}
+        />
+
+        <Select
+          placeholder="Số sao"
+          allowClear
+          value={rating || undefined}
+          onChange={(v) => setRating(v || "")}
+          style={{ width: 140 }}
+        >
+          {[1, 2, 3, 4, 5].map((r) => (
+            <Option key={r} value={r}>
+              {r} sao
+            </Option>
+          ))}
+        </Select>
+
+        <Select
+          placeholder="Nội dung"
+          allowClear
+          value={hasProfanity || undefined}
+          onChange={(v) => setHasProfanity(v || "")}
+          style={{ width: 200 }}
+        >
+          <Option value="true">⚠️ Có từ ngữ không phù hợp</Option>
+          <Option value="false">✅ Nội dung sạch</Option>
+        </Select>
+
+        {/* NÚT LỌC */}
+        <Button
+          type="primary"
+          icon={<SearchOutlined />}
+          onClick={() => fetchReviews(1)}
+        >
+          Lọc
+        </Button>
+
+        {/* NÚT HUỶ LỌC */}
+        <Button
+          icon={<ReloadOutlined />}
+          onClick={() => {
+            setQ("");
+            setRating("");
+            setHasProfanity("");
+            fetchReviews(1);
+          }}
+        >
+          Huỷ lọc
+        </Button>
+      </Space>
+
+
 
       {/* TABLE */}
       <Card>

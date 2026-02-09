@@ -6,9 +6,15 @@ import messIcon from "../../assets/Facebook_Messenger_logo_2025.svg.png";
 import zaloIcon from "../../assets/images.png";
 
 const QUICK_ACTIONS = [
+<<<<<<< Updated upstream
   "Top 5 sản phẩm yêu thích nhất",
   "chat với nhân viên",
   "tư vấn giá xỉ cho mặt hàng",
+=======
+  "Top sản phẩm yêu thích nhất",
+  "Chat với nhân viên",
+  "Tư vấn giá sỉ cho mặt hàng",
+>>>>>>> Stashed changes
   "Hotline liên hệ - bảo hành",
   "Đại tiệc xả kho - GIẢM ĐẾN 80%",
 ];
@@ -102,6 +108,7 @@ export default function ChatWidget() {
     setOpen(true);
     setMessages((prev) => [...prev, { role: "me", text: t }]);
 
+<<<<<<< Updated upstream
     // nếu user bấm "chat với nhân viên" thì mở messenger
     if (t.toLowerCase().includes("chat với nhân viên")) {
       setMessages((prev) => [
@@ -113,6 +120,12 @@ export default function ChatWidget() {
       }, 500);
       return;
     }
+=======
+    // Các logic điều hướng Zalo/Messenger giữ nguyên
+    const isZaloAction = t.toLowerCase().includes("hotline") || t.toLowerCase().includes("giá xỉ");
+    if (isZaloAction) { window.open(ZALO_LINK, "https://zalo.me/0379436536"); return; }
+    if (t.toLowerCase().includes("chat với nhân viên")) { window.open(MESSENGER_LINK, "https://www.facebook.com/vattudienlanhphuhien"); return; }
+>>>>>>> Stashed changes
 
     try {
       const res = await fetch("http://localhost:9999/api/chat", {
@@ -287,6 +300,7 @@ export default function ChatWidget() {
           })}
         </div>
 
+<<<<<<< Updated upstream
         {/* INPUT BAR (menu trái + input + send phải) */}
         <form style={styles.inputBar} onSubmit={onSubmit}>
           <button type="button" style={styles.menuBtn} title="Menu">
@@ -304,6 +318,19 @@ export default function ChatWidget() {
             ➤
           </button>
         </form>
+=======
+        <div className="cw-bottom-area">
+          <form className="cw-input-bar" onSubmit={(e) => { e.preventDefault(); if(input.trim()){ sendUserMessage(input); setInput(""); } }}>
+            {/* <button type="button" className="cw-menu-btn" style={{width:'36px', height:'36px', border:'none', background:'#f3f4f6', borderRadius:'10px'}}>☰</button> */}
+            <input className="cw-text-input" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Nhập tin nhắn..." />
+            <button type="submit" className="cw-send-btn">➤</button>
+          </form>
+          <div className="cw-footer-text">
+            <div>Mọi Thông tin mang tính tham khảo. Liên hệ hotline để biết thêm chi tiết:  <b> 0986 215 146</b></div>
+           
+          </div>
+        </div>
+>>>>>>> Stashed changes
       </div>
     </>
   );

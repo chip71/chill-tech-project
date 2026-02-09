@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const Review = require("../models/Review");
 const Customer = require("../models/Customer");
-const { censorText } = require("../service/profanity.service");
+// const { censorText } = require("../service/profanity.service");
+const { censorText, hasProfanity } = require("../service/profanity.service");
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -206,9 +207,22 @@ const adminListReviews = async (req, res) => {
     const rating = req.query.rating ? Number(req.query.rating) : null;
     const productId = req.query.productId || null;
     const includeHidden = String(req.query.includeHidden) === "true";
+    const hasProfanityQuery = req.query.hasProfanity;
+    const hasProfanityFilter =
+      hasProfanityQuery === "true"
+        ? true
+        : hasProfanityQuery === "false"
+          ? false
+          : null;
 
     const filter = {};
-    if (!includeHidden) filter.isHidden = false;
+    if (!includeHidden) {
+      filter.$or = [
+        { isHidden: false },
+        { isHidden: { $exists: false } },
+      ];
+    }
+
     if (rating) filter.rating = rating;
 
     // filter theo sản phẩm
@@ -217,21 +231,37 @@ const adminListReviews = async (req, res) => {
     }
     // search theo comment hoặc userName
     if (q) {
-      filter.$or = [
-        { comment: { $regex: q, $options: "i" } },
-        { userName: { $regex: q, $options: "i" } },
-      ];
+      filter.$and = filter.$and || [];
+      filter.$and.push({
+        $or: [
+          { comment: { $regex: q, $options: "i" } },
+          { userName: { $regex: q, $options: "i" } },
+        ],
+      });
     }
 
-    const [items, total] = await Promise.all([
-      Review.find(filter)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .populate("product", "productName imageUrl price")
-        .lean(),
-      Review.countDocuments(filter),
-    ]);
+
+    let items = await Review.find(filter)
+      .sort({ createdAt: -1 })
+      .populate("product", "productName imageUrl price")
+      .lean();
+
+    // ✅ FILTER CHỬI TỤC
+    if (hasProfanityFilter !== null) {
+      items = items.filter((r) => {
+        if (!r.comment) return false;
+        return hasProfanityFilter
+          ? hasProfanity(r.comment)
+          : !hasProfanity(r.comment);
+      });
+
+    }
+
+    const total = items.length;
+
+    // paginate sau khi filter
+    items = items.slice((page - 1) * limit, page * limit);
+
 
     return res.json({
       page,
