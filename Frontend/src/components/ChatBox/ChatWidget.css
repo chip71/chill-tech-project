@@ -1,0 +1,142 @@
+/* --- PHẦN QUICK ACTIONS NGOÀI (Cạnh các nút Social) --- */
+.cw-quick-actions {
+    position: fixed;
+    right: 16px;
+    bottom: 220px;
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cw-qa-btn-outer {
+    background: #fff;
+    border: 2px solid #20137d;
+    color: #6536f1;
+    padding: 10px 12px;
+    border-radius: 18px;
+    cursor: pointer;
+    font-weight: 700;
+    max-width: 260px;
+    text-align: left;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    transition: transform 0.2s;
+}
+
+.cw-qa-btn-outer:hover {
+    transform: translateX(-5px);
+}
+
+/* --- CỘT ICON SOCIAL BÊN PHẢI --- */
+.cw-social-wrap {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cw-social-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    display: grid;
+    place-items: center;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    overflow: hidden;
+}
+
+.cw-social-btn img { width: 100%; height: 100%; object-fit: cover; }
+.cw-logo-img { width: 88% !important; height: 88% !important; object-fit: contain !important; }
+.cw-zalo-img { width: 82% !important; height: 82% !important; object-fit: contain !important; }
+
+/* Nút mũi tên ▴/▾ để ẩn hiện menu ngoài */
+.cw-actions-toggle {
+    position: fixed;
+    right: 16px;
+    bottom: 196px;
+    z-index: 9999;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* --- KHUNG CHAT CHÍNH --- */
+.cw-widget {
+    position: fixed;
+    right: 88px;
+    bottom: 16px;
+    z-index: 9999;
+    width: 360px;
+    max-width: calc(100vw - 120px);
+    height: 600px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 18px 60px rgba(0,0,0,.22);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: system-ui, sans-serif;
+}
+
+/* Header màu đỏ */
+.cw-top-bar {
+    height: 56px;
+    background: #402ab8;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    flex-shrink: 0;
+}
+
+.cw-top-left { display: flex; gap: 10px; alignItems: center; }
+.cw-brand-logo-wrap { width: 34px; height: 34px; border-radius: 50%; background: #fff; overflow: hidden; display: grid; place-items: center; }
+.cw-brand-title { font-weight: 900; font-size: 14px; }
+.cw-brand-sub { font-size: 11px; opacity: 0.9; }
+
+/* Nội dung tin nhắn */
+.cw-body { flex: 1; background: #fff; padding: 12px; overflow-y: auto; }
+.cw-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 10px; }
+.cw-avatar-wrap { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+
+.cw-bubble { max-width: 70%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.35; }
+.cw-bubble-bot { background: #f3f4f6; color: #111827; }
+.cw-bubble-me { background: #fff; color: #080113; border: 1.6px solid #2302de; }
+
+/* --- GỢI Ý BÊN TRONG KHUNG CHAT --- */
+.cw-in-chat-qa-container {
+    background: #fff;
+    padding: 10px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cw-qa-header { display: flex; justify-content: space-between; font-size: 11px; color: #888; font-weight: bold; }
+.cw-in-chat-btn { background: #fff; border: 1px solid #5e1de1; color: #4b1de1; padding: 8px; border-radius: 10px; cursor: pointer; text-align: left; font-size: 13px; }
+.cw-reopen-in-chat { align-self: center; border: none; background: #eee; padding: 4px 12px; border-radius: 15px; font-size: 11px; margin-bottom: 10px; cursor: pointer; }
+
+/* --- THANH NHẬP LIỆU & FOOTER --- */
+.cw-bottom-area { border-top: 1px solid #eee; padding-bottom: 10px; background: #fff; }
+.cw-input-bar { height: 50px; display: flex; align-items: center; gap: 8px; padding: 0 10px; }
+.cw-text-input { flex: 1; height: 36px; border-radius: 12px; border: 1px solid #e5e7eb; padding: 0 12px; outline: none; }
+.cw-send-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: #2a1de1; color: #fff; cursor: pointer; }
+
+.cw-footer-text { padding: 0 12px; font-size: 10px; color: #999; text-align: center; line-height: 1.4; }
+.cw-brand-name { color: #0514e0; font-weight: bold; }

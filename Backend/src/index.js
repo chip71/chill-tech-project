@@ -7,6 +7,8 @@ import { viewEngine } from "./config/viewEngine";
 import { initWebRoutes } from "./routes/web";
 import { initAPIRoutes } from "./routes/api";
 const cookieParser = require("cookie-parser");
+// ✅ SỬA: Bỏ ../ vì index.js và controller đều nằm trong src
+
 
 dotenv.config();
 
