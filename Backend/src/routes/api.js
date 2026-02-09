@@ -17,6 +17,13 @@ const uploadReviewImage = require("../middleware/uploadReviewImage");
 
 
 const initAPIRoutes = (app) => {
+
+  // ... các import hiện tại của bạn
+const aiController = require("../controller/aiController");
+
+
+  /* ===== AI CHATBOT ===== */
+  router.post("/chat", aiController.chatWithAI);
   /* ===== AUTH ===== */
   router.post("/auth/register", customerController.handleRegisterCustomer);
   router.post("/auth/login", authController.login);
