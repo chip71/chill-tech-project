@@ -1,72 +1,106 @@
 import Groq from "groq-sdk";
 import Product from "../models/Product.js";
+import Cart from "../models/Cart.js";
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-export const getAIResponse = async (userMessage) => {
-  try {
-    // 👉 Extract số lượng khách muốn mua (nếu có)
-    const quantityMatch = userMessage.match(/\d+/);
-    const quantity = quantityMatch ? parseInt(quantityMatch[0]) : null;
+// nhớ sản phẩm khách đang hỏi
+let pendingProduct = null;
 
-    // 👉 Search sản phẩm đúng schema MongoDB
-    const products = await Product.find({
+export const getAIResponse = async (userMessage, userId) => {
+  try {
+    const msg = userMessage.toLowerCase().trim();
+
+    // ===== 1. DETECT CONFIRM TRƯỚC =====
+    const confirmWords = ["có", "ok", "đồng ý", "chốt", "mua", "thêm"];
+
+    const isConfirm = confirmWords.includes(msg);
+
+    if (isConfirm && pendingProduct && userId) {
+      await Cart.updateOne(
+        { user: userId },
+        {
+          $push: {
+            items: {
+              product: pendingProduct._id,
+              quantity: 1,
+            },
+          },
+        },
+        { upsert: true }
+      );
+
+      const added = pendingProduct;
+      pendingProduct = null;
+
+      return `
+🛒 **ĐÃ THÊM VÀO GIỎ HÀNG**
+
+📦 ${added.productName}
+💰 **${added.price?.toLocaleString()}đ**
+📊 Còn: ${added.stockQuantity}
+
+👉 Bạn vào giỏ hàng thanh toán nhé 😄
+      `;
+    }
+
+    // ===== 2. SEARCH PRODUCT =====
+    let products = await Product.find({
       status: "ACTIVE",
       $or: [
-        { productName: { $regex: userMessage, $options: "i" } },
-        { description: { $regex: userMessage, $options: "i" } },
-        { category: { $regex: userMessage, $options: "i" } },
+        { productName: { $regex: msg, $options: "i" } },
+        { description: { $regex: msg, $options: "i" } },
+        { category: { $regex: msg, $options: "i" } },
       ],
     })
       .limit(5)
       .lean();
 
-    // 👉 Tạo context gửi AI
-    let context = "Thông tin sản phẩm tại ChillTech:\n";
+    if (products.length) {
+      pendingProduct = products[0];
+    }
 
-    if (products.length > 0) {
-      products.forEach((p) => {
-        const totalPrice =
-          quantity && p.price ? quantity * p.price : null;
+    // ===== 3. CONTEXT =====
+    let context = "";
 
+    if (products.length) {
+      context += "🔥 SẢN PHẨM HIỆN CÓ:\n";
+
+      products.forEach(p => {
         context += `
-- ${p.productName}
-  💰 Giá: ${p.price || "Liên hệ"}đ
-  📦 Tồn kho: ${p.stockQuantity ?? "Không rõ"} ${p.unit || "cái"}
-  ${
-    totalPrice
-      ? `🧮 Nếu mua ${quantity}: ${totalPrice.toLocaleString()}đ`
-      : ""
-  }
-  📝 Mô tả: ${p.description || "Đang cập nhật"}
+📦 ${p.productName}
+💰 **${p.price?.toLocaleString()}đ**
+📊 Tồn kho: ${p.stockQuantity}
 `;
       });
     } else {
-      context += "Không tìm thấy sản phẩm phù hợp.\n";
+      context = "❌ Không tìm thấy sản phẩm phù hợp.";
     }
 
-    // 👉 Prompt AI
+    // ===== 4. AI CHAT =====
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
+      temperature: 0.4,
       messages: [
         {
           role: "system",
           content: `
-Bạn là trợ lý AI bán hàng ChillTech.
+Bạn là trợ lý bán hàng ChillTech sử dụng dữ liệu trong database không đi lan man.
 
-QUY TẮC QUAN TRỌNG:
+🔥 DÙNG NHIỀU ICON:
+💰 📦 🛒 😊 👍 ✨
 
-- Luôn dùng dữ liệu sản phẩm được cung cấp.
-- Nếu khách hỏi số lượng → trả lời theo "Tồn kho".
-- Nếu khách hỏi mua bao nhiêu tiền:
-  → lấy giá × số lượng trong context.
-- Nếu không có sản phẩm:
-  → hướng khách chat nhân viên hoặc gọi 0986 215 146.
-- Không tự bịa dữ liệu.
-- Trả lời ngắn gọn, thân thiện 😊.
-`,
+🔥 Nếu có sản phẩm:
+→ hỏi "Bạn muốn thêm vào giỏ hàng không? 🛒"
+
+🔥 Giá luôn in đậm:
+ví dụ **250.000đ**
+
+🔥 Trả lời ngắn gọn thân thiện.
+🔥 Chỉ dùng dữ liệu context.
+          `,
         },
         {
           role: "user",
@@ -78,6 +112,6 @@ QUY TẮC QUAN TRỌNG:
     return completion.choices[0].message.content;
   } catch (error) {
     console.error("AI Service Error:", error);
-    return "Xin lỗi, AI đang bận 😢. Anh/chị thử lại sau giúp em.";
+    return "😢 AI đang bận, thử lại giúp mình nhé!";
   }
 };

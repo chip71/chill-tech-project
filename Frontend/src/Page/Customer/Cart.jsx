@@ -27,7 +27,7 @@ import {
 import { useCart } from "../../Routes/Context/CartContext";
 
 const { Title, Text } = Typography;
-
+// https://api.chilltech.store
 const API_URL = "http://localhost:9999";
 
 const Cart = () => {

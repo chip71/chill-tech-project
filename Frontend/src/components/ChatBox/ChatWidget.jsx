@@ -9,7 +9,7 @@ import zaloIcon from "../../assets/images.png";
 const QUICK_ACTIONS = [
   "Top sản phẩm yêu thích nhất",
   "chat với nhân viên",
-  "tư vấn giá xỉ cho mặt hàng",
+  "tư vấn giá sỉ cho mặt hàng",
   "Hotline liên hệ - bảo hành",
 ];
 
@@ -49,7 +49,7 @@ export default function ChatWidget() {
 
   useEffect(() => {
     if (messages.length === 0) {
-      setMessages([{ role: "bot", text: "Xin chào 👋 Mình là Trợ lý AI ChillTech.\nRất sẵn lòng được hỗ trợ Anh/Chị ạ 😊" }]);
+      setMessages([{ role: "bot", text: "Xin chào 👋 Mình là Trợ lý AI Chill Tech.\nRất sẵn lòng được hỗ trợ Anh/Chị ạ 😊" }]);
     }
   }, []);
 
@@ -72,7 +72,11 @@ export default function ChatWidget() {
       const res = await fetch("http://localhost:9999/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: t }), // Chỉ cần gửi message
+       body: JSON.stringify({
+  message: t,
+  userId: localStorage.getItem("userId"),
+})
+// Chỉ cần gửi message
       });
 
       const data = await res.json();
@@ -94,7 +98,7 @@ export default function ChatWidget() {
 
   const resetChat = () => {
     localStorage.removeItem("chat_messages");
-    setMessages([{ role: "bot", text: "Chào bạn, mình có thể giúp gì thêm không?" }]);
+    setMessages([{ role: "bot", text: "Chào bạn, mình có thể giúp gì thêm không?😄" }]);
   };
 
   return (
@@ -124,7 +128,7 @@ export default function ChatWidget() {
           <div className="cw-top-left">
             <div className="cw-brand-logo-wrap"><img src={chatLogo} alt="logo" /></div>
             <div>
-              <div className="cw-brand-title">Trợ lý AI ChillTech</div>
+              <div className="cw-brand-title">Trợ lý AI Chill Tech</div>
               <div className="cw-brand-sub">Tư vấn tự động 24/7</div>
             </div>
           </div>
