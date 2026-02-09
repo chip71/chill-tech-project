@@ -6,9 +6,9 @@ import messIcon from "../../assets/Facebook_Messenger_logo_2025.svg.png";
 import zaloIcon from "../../assets/images.png";
 
 const QUICK_ACTIONS = [
-  "Top sản phẩm yêu thích nhất",
-  "Chat với nhân viên",
-  "Tư vấn giá sỉ cho mặt hàng",
+  "Top 5 sản phẩm yêu thích nhất",
+  "chat với nhân viên",
+  "tư vấn giá xỉ cho mặt hàng",
   "Hotline liên hệ - bảo hành",
 ];
 
