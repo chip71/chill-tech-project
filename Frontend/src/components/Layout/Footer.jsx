@@ -46,7 +46,7 @@ const AppFooter = () => {
           <h4>Hỗ trợ</h4>
           <Space direction="vertical">
             <a href="/about">Về chúng tôi</a>
-            <a href="/warranty">Chính sách đổi trả</a>
+            <a href="/warranty">Chính sách bảo hành</a>
           </Space>
         </Col>
 
@@ -58,7 +58,7 @@ const AppFooter = () => {
               <EnvironmentOutlined /> 627 Lê Lai, P. Quang Hưng, Thanh Hóa
             </span>
             <span>
-              <PhoneOutlined /> +84 986 215 146
+              <PhoneOutlined /> 0986 215 146
             </span>
             <a
               href="https://www.facebook.com/vattudienlanhphuhien?locale=vi_VN"
@@ -88,7 +88,7 @@ const AppFooter = () => {
           >
             <iframe
               title="Chill Tech Map"
-              src="https://www.google.com/maps?q=627%20L%C3%AA%20Lai%20Thanh%20H%C3%B3a&output=embed"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3737.771763181436!2d105.801926!3d19.787003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313657eafd889919%3A0x732f05ee34f58318!2zQ-G7rWEgSMOgbmcgVuG6rXQgVMawIMSQaeG7h24gTOG6oW5oIFBow7kgSGnhu4Fu!5e0!3m2!1svi!2s!4v1707400000000"
               width="100%"
               height="100%"
               style={{ border: 0 }}

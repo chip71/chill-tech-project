@@ -87,7 +87,7 @@ export const getAIResponse = async (userMessage, userId) => {
         {
           role: "system",
           content: `
-Bạn là trợ lý bán hàng ChillTech sử dụng dữ liệu trong database không đi lan man.
+Bạn là trợ lý bán hàng ChillTech chuyên bán linh kiện điện lạnh sử dụng dữ liệu trong database không đi lan man.
 
 🔥 DÙNG NHIỀU ICON:
 💰 📦 🛒 😊 👍 ✨

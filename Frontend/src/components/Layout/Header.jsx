@@ -14,6 +14,8 @@ import {
   FacebookOutlined,
   ShoppingCartOutlined,
   UserOutlined,
+  ProfileFilled,
+  ProfileOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -189,6 +191,10 @@ const AppHeader = () => {
                 allowClear
                 style={{ width: 280 }}
               /> */}
+              <UserOutlined
+                style={{ fontSize: 22, cursor: "pointer" }}
+                onClick={() => navigate("/profile")}
+              />
 
               <Badge count={totalItems} showZero>
                 <ShoppingCartOutlined
